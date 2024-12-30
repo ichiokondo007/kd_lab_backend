@@ -1,8 +1,10 @@
-import express from 'express';
+
+import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import fs from 'fs';
 import path from 'path';
+import { User } from './types/user';
 
 dotenv.config();
 
@@ -12,7 +14,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // users.json読み込み
 const usersFilePath = path.join(__dirname, 'users.json');
-const users = JSON.parse(fs.readFileSync(usersFilePath, 'utf8'));
+const users: User[] = JSON.parse(fs.readFileSync(usersFilePath, 'utf8'));
 
 // セッション設定
 app.use(session({
@@ -28,13 +30,14 @@ app.use(express.json());
   * 認証エンドポイント
   * POST /login
   */
-app.post('/login', (req, res) => {
+app.post('/login', (req: Request, res: Response) => {
   const { id, password } = req.body;
 
   const user = users.find(user => user.id === id && user.password === password);
   if (user) {
     // 認証成功
     req.session.userId = user.id;
+    req.session.userName = user.name; // nameをセッションに保存
     res.status(200).json({ message: 'Login successful', redirectTo: '/top' });
   } else {
     // 認証失敗
@@ -45,12 +48,12 @@ app.post('/login', (req, res) => {
 // セッション確認用のミドルウェア
 /**
  *  認証チェックミドルウェア
- *  @param {Object} req - リクエストオブジェクト
- *  @param {Object} res - レスポンスオブジェクト
- *  @param {Function} next - 次のミドルウェアを実行する関数
+ *  @param {Request} req - リクエストオブジェクト
+ *  @param {Response} res - レスポンスオブジェクト
+ *  @param {NextFunction} next - 次のミドルウェアを実行する関数
  */
-const isAuthenticated = (req, res, next) => {
-  if (req.session.userId) {
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session.userId && req.session.userName) {
     next();
   } else {
     res.status(403).json({ message: 'Unauthorized' });
@@ -63,12 +66,15 @@ const isAuthenticated = (req, res, next) => {
   * @returns {Object} - トップページのレスポンス
   * @throws {Error} - 認証エラー
   */
-app.get('/top', isAuthenticated, (req, res) => {
-  res.json({ message: 'Welcome to the top page!', userId: req.session.userId });
+app.get('/top', isAuthenticated, (req: Request, res: Response) => {
+  res.json({
+    message: 'Welcome to the top page!',
+    userId: req.session.userId,
+    userName: req.session.userName // セッションからユーザー名を取得してレスポンス
+  });
 });
 
 // サーバ起動
 app.listen(PORT, () => {
   console.log(`KDLab Server is running at ${URL}:${PORT}`);
 });
-

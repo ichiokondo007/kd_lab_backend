@@ -1,10 +1,12 @@
 [
   {
     "id": "user1",
+    "name":"ichio kon",
     "password": "password123"
   },
   {
     "id": "user2",
+    "name":"nao kon",
     "password": "password123"
   }
 ]
