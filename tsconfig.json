@@ -5,7 +5,13 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "typeRoots": [
+      "./types",
+      "./src/types",
+      "./node_modules/@types"
+    ],
+    "types":["express-session"]
   },
   "include": ["src/**/*.ts", "src/types/**/*.d.ts"],
   "exclude": ["node_modules"]
